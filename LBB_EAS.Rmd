@@ -1,0 +1,126 @@
+---
+title: "LBB P4DS"
+author: "Emannuelle Alpha Sony"
+date: "7/15/2021"
+output:
+  html_document:
+    theme: cosmo
+    highlight: breezedark
+    toc: true
+    toc_float:
+      collapsed: true
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# *This is my report of exploring retail data for my LBB*
+
+## Reading Data
+
+```{r}
+retail <- read.csv("data_input/retail.csv")
+```
+
+## Data Wrangling
+
+```{r}
+library(dplyr)
+retail <- retail %>% 
+  mutate(Ship.Mode = as.factor(Ship.Mode), Category = as.factor(Category), Sub.Category = as.factor(Sub.Category), Segment = as.factor(Segment))
+retail$Order.Date <- as.Date(retail$Order.Date,
+                             "%m/%d/%y")
+retail$Ship.Date <- as.Date(retail$Ship.Date,
+                             "%m/%d/%y")
+anyNA(retail)
+head(retail)
+retail_clean <- retail %>% 
+  select(Order.Date, Ship.Date, Ship.Mode, Segment, Category, Sub.Category, Product.Name, Sales, Quantity, Discount, Profit)
+head(retail_clean)
+```
+
+*In this section, I clean my data using DPLYR Package to make it easier and faster.*
+
+While cleaning the data, I did some changing in data type and also selecting the needed columns and removing columns that I don't need.
+
+## Subsetting
+
+In this section I wanna know:
+1. Products that give big profit
+2. Products that give big loss
+
+```{r}
+retail_clean %>% 
+  filter(Profit > 4500 | Profit < -4500)
+```
+
+## Adding New Column
+
+From the result above, I wanna make a new column about the profit status
+
+```{r}
+retail_clean$Profit.Loss <- as.factor(ifelse(retail_clean$Profit < 0, "Loss", "Profit"))
+head(retail_clean)
+```
+## Analyzing
+
+From the final data. I want to analyze the data.
+
+1. Profits that are more than 2000 and is from the "Consumer" Segment
+2. Profits that are more than 2000 and is from the "Coorporate" Segment
+3. Profits that are more than 500 and is from the "Furniture" Category
+
+```{r}
+retail_clean %>% 
+  filter(Segment == "Consumer",
+         Profit >= 2000)
+```
+```{r}
+retail_clean %>% 
+  filter(Category == "Furniture",
+         Profit >= 500)
+```
+```{r}
+retail_clean %>% 
+  filter(Segment == "Consumer",
+         Profit >= 500)
+```
+## Summary
+
+There are a few ways to pull a summary from a data and one of them is the "summary" function
+
+```{r}
+summary(retail_clean)
+```
+Here you can see the min, median, max, mean, and etc.
+
+## Data Aggregating
+
+Here are some examples for aggregating
+
+1. Table
+```{r}
+table(retail_clean$Category, retail_clean$Segment == "Consumer")
+```
+2. Prop.Table
+```{r}
+round(prop.table(table(retail_clean$Category, retail_clean$Segment))*100, digits = 2)
+```
+3. XTabs
+```{r}
+# Profits each category and segment
+xtabs(formula = Profit ~ Category + Segment, data = retail_clean)
+```
+4. Aggregate
+```{r}
+#  Profit's mean each category and segment
+aggregate(formula = Profit ~ Category + Segment, data = retail_clean, FUN = mean)
+#  Top profit's mean each segment and category
+aggregate(formula = Profit ~ Category + Segment, data = retail_clean, FUN = max)
+# Top loss' mean each segment and category
+aggregate(formula = Profit ~ Category + Segment, data = retail_clean, FUN = min)
+```
+
+**Maybe that is all for my little explanation of my retail data for my LBB. Thank you.**
